@@ -18,33 +18,34 @@ class DB:
     db = dataset.connect(db_url)
 
     @staticmethod
-    def add_statistical(model: str, runid, stats, initial_runid=None,
-                        initial_param_id=None, date=None):
+    def add_statistical(
+        model: str, runid, stats, initial_runid=None, initial_param_id=None, date=None
+    ):
         stats = list(stats)
         data = {
-            'model': model,
-            'runid': runid,
-            'date': date,
+            "model": model,
+            "runid": runid,
+            "date": date,
             "initial_runid": initial_runid,
-            "initial_param_id": initial_param_id
+            "initial_param_id": initial_param_id,
         }
 
-        tuples = [(k, float(v)) for k, v in
-                  zip(DB.config["STATS"].split(','), stats)]
+        tuples = [(k, float(v)) for k, v in zip(DB.config["STATS"].split(","), stats)]
         data.update(dict(tuples))
         with DB.db as tx:
-            tx['stats'].insert(data)
+            tx["stats"].insert(data)
 
     @staticmethod
-    def add_numbers(model: str, runid, data_dict, initial_runid=None,
-                    goodness=None, date=None):
+    def add_numbers(
+        model: str, runid, data_dict, initial_runid=None, goodness=None, date=None
+    ):
         data_dict = list(data_dict)
         data = {
-            'model': model,
-            'runid': runid,
-            'date': date,
+            "model": model,
+            "runid": runid,
+            "date": date,
             "initial_runid": initial_runid,
-            "goodness": goodness
+            "goodness": goodness,
         }
         tuples = [(f"theta{i}", float(v)) for i, v in enumerate(data_dict)]
         data.update(dict(tuples))
@@ -54,14 +55,14 @@ class DB:
     @staticmethod
     def add_monte_carlo(model: str, runid, abundances, date=None, logl=None):
         data = {
-            'model': f"{model}",
-            'runid': runid,
-            'date': date,
+            "model": f"{model}",
+            "runid": runid,
+            "date": date,
             "Yp": abundances[0],
             "DoH": abundances[1],
             "He3oH": abundances[2],
             "Li7oH": abundances[3],
-            "logl": logl
+            "logl": logl,
         }
         with DB.db as tx:
             tx[f"{model}_mc"].insert(data)

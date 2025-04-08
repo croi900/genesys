@@ -14,6 +14,19 @@ from .potential import PotentialModel
 from .model import Model
 
 
-__all__ = ['M1V0', 'M1VEXP', 'M1VPHI2', 'M1VPHI24', 'M2V0', 'M2VEXP',
-           'M2VPHI2', 'M2VPHI24', 'M3V0', 'M3VEXP', 'M3VPHI2', 'M3VPHI24',
-           'Model', 'PotentialModel']
+__all__ = [
+    "M1V0",
+    "M1VEXP",
+    "M1VPHI2",
+    "M1VPHI24",
+    "M2V0",
+    "M2VEXP",
+    "M2VPHI2",
+    "M2VPHI24",
+    "M3V0",
+    "M3VEXP",
+    "M3VPHI2",
+    "M3VPHI24",
+    "Model",
+    "PotentialModel",
+]

@@ -13,13 +13,13 @@ class TestModel(Model):
         super().__init__()
 
     def rho(self, Tg):
-        return self.a * Tg ** 4
+        return self.a * Tg**4
 
     def p(self, Tg):
-        return( 1 / 3) * self.a * Tg ** 4
+        return (1 / 3) * self.a * Tg**4
 
     def drho_dt(self, Tg):
-        return self.a * 4 * Tg ** 3
+        return self.a * 4 * Tg**3
 
     def compute_abundances(self):
         print("Computing abundances")
@@ -31,14 +31,14 @@ class TestModel(Model):
         PRyMini.compute_nTOp_flag = False
         PRyMini.recompute_nTOp_rates = False
         PRyMini.ReloadKeyRates()
-        warnings.filterwarnings('error')
+        warnings.filterwarnings("error")
         try:
             prym = PRyMmain.PRyMclass(self.rho, self.p, self.drho_dt)
-            warnings.filterwarnings('ignore')
+            warnings.filterwarnings("ignore")
 
             return prym.PRyMresults()[4:8]
         except:
             # traceback.print_exc()
-            warnings.filterwarnings('ignore')
+            warnings.filterwarnings("ignore")
 
-            return [1e7,1e7,1e7,1e7]
+            return [1e7, 1e7, 1e7, 1e7]

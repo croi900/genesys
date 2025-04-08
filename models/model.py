@@ -8,13 +8,14 @@ import PRyM.PRyM_init as PRyMini
 import PRyM.PRyM_main as PRyMmain
 from PRyM.PRyM_init import MeV, MeV4_to_gcmm3
 
+
 class Model:
     def __init__(self):
         self.valid = True
         return
 
     def compute_abundances(self):
-       return
+        return
 
     @staticmethod
     def mcmc_constraints(theta):
@@ -23,7 +24,6 @@ class Model:
     @staticmethod
     def to_string():
         return "bald model"
-
 
     @staticmethod
     def get_initials():
