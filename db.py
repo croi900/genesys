@@ -9,10 +9,10 @@ import requests
 import dataset
 from dotenv import dotenv_values
 from termcolor import colored
-
+import pymysql
 
 class DB:
-    db_url = "mysql+pymysql://weyl:strongpassword@192.168.1.137/weyl_oop"
+    db_url = "mysql+pymysql://weyl:strongpassword@192.168.1.239/weyl_oop"
     config = dotenv_values(".env")
     print(config)
     db = dataset.connect(db_url)

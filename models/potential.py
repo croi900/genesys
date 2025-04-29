@@ -351,7 +351,7 @@ class PotentialModel(Model):
             )
             return prym.PRyMresults()[4:8]
         except:
-            return [np.inf, np.inf, np.inf, np.inf]
+            return [1e9,1e9,1e9,1e9]
 
     def compute_bbn(self):
         if (

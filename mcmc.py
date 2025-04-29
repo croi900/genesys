@@ -6,6 +6,8 @@ from schwimmbad import MultiPool
 from db import DB
 from models import Model
 from models.potential import PotentialModel
+from pool import DaskPool
+from dask.distributed import Client
 
 
 class MCMC:
@@ -15,17 +17,18 @@ class MCMC:
         lower_bound=-5,
         upper_bound=5,
         ndim=None,
-        nsteps=1000,
-        nwalkers=128,
-        nthreads=16,
+        nsteps=100000,
+        nwalkers=5,
+        nthreads=8,
         database=True,
+        cluster=None
     ):
         self.initials = model_class.get_initials()
         self.model_class: PotentialModel.__class__ = model_class
         self.lower_bound = lower_bound
         self.upper_bound = upper_bound
 
-        self.Yp_ave = 0.245
+        self.Yp_ave = 0.247
         self.Yp_std = 0.003
 
         self.DoH_ave = 2.547
@@ -37,12 +40,14 @@ class MCMC:
         self.Li7oH_ave = 1.6
         self.Li7oH_std = 0.3
 
+        self.write_ctr = 0
+
         self.model: Model
         self.ndim = ndim
         self.nsteps = nsteps
         self.nwalkers = nwalkers
         self.nthreads = nthreads
-
+        self.cluster = cluster
         if database:
             self.runid = DB.get_next_runid(self.model_class.to_string())
 
@@ -63,6 +68,10 @@ class MCMC:
         # save data
         # print(f"Valid parameters found for {self.model_class.to_string()}")
         # sys.stdout.flush()
+        if -0.5 * (chi2_Yp + chi2_DoH + chi2_He3oH) > -1000:
+            self.write_ctr += 1
+            if self.write_ctr > 3000:
+                exit()
 
         if self.database:
             DB.add_numbers(
@@ -103,12 +112,24 @@ class MCMC:
         return lp + self._log_likelihood(theta)
 
     def begin(self):
-        with MultiPool(processes=self.nthreads) as pool:
+        if self.cluster is None:
+            with MultiPool(processes=self.nthreads) as pool:
+                initial_pop = np.random.uniform(
+                    self.lower_bound, self.upper_bound, (self.nwalkers, self.ndim)
+                )
+
+                sampler = emcee.EnsembleSampler(
+                    self.nwalkers, self.ndim, self._log_prob, pool=pool
+                )
+                sampler.run_mcmc(initial_pop, self.nsteps, progress=True)
+        else:
+
             initial_pop = np.random.uniform(
                 self.lower_bound, self.upper_bound, (self.nwalkers, self.ndim)
             )
 
             sampler = emcee.EnsembleSampler(
-                self.nwalkers, self.ndim, self._log_prob, pool=pool
+                self.nwalkers, self.ndim, self._log_prob, pool=self.cluster
             )
             sampler.run_mcmc(initial_pop, self.nsteps, progress=True)
+

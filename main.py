@@ -1,99 +1,77 @@
+import os
 import threading
 import warnings
+from multiprocessing import freeze_support
 
 import dataset
-from db import DB
+from schwimmbad import MultiPool
+
 from ga import GeneticAlgorithm
-from joblib import Parallel, delayed
 from mcmc import MCMC
 from models import *  # Import your null potential model class
 
+from pool import DaskPool
+from dask.distributed import LocalCluster, Client
 warnings.filterwarnings("ignore")
 
 
+if __name__ == '__main__':
+    cluster = None
 
-#
 
-
-def main():
-    # Create a GeneticAlgorithm instance using the null potential model.
-    # The candidate parameter vector is assumed to be 6-dimensional (p_phi0, p_phi01, p_psi0, p_psi01, p_alpha, p_lam).
-    ga = GeneticAlgorithm(
-        model_class=M1V0,  # the model object to be used; no default is provided
-        npar=6,
-        varlo=-1,
-        varhi=1,
-        maxit=1000,
-        popsize=100,
-        threshold=0.1,
-        mutrate=0.7,
-        selection=0.5,
-        stagnation_limit=10,
-        print_filter_reason=False,
+    mcmc_m1vphi2 = MCMC(
+        model_class=M1VPHI2, nthreads=5, ndim=1, lower_bound=-1, upper_bound=1, cluster=cluster
+    )
+    mcmc_m1vphi24 = MCMC(
+        model_class=M1VPHI24, nthreads=5, ndim=2, lower_bound=-3, upper_bound=3, cluster=cluster
+    )
+    mcmc_m1vexp = MCMC(
+        model_class=M1VEXP, nthreads=5, ndim=2, lower_bound=-5, upper_bound=5, cluster=cluster
     )
 
-    best_params, best_fitness = ga.run()
+    mcmc_m2vphi2 = MCMC(
+        model_class=M2VPHI2, nthreads=5, ndim=1, lower_bound=-0.5, upper_bound=0.5, cluster=cluster
+    )
+    mcmc_m2vphi24 = MCMC(
+        model_class=M2VPHI24, nthreads=5, ndim=2, lower_bound=-4, upper_bound=4, cluster=cluster
+    )
+    mcmc_m2vexp = MCMC(
+        model_class=M2VEXP, nthreads=5, ndim=2, lower_bound=-5, upper_bound=5, cluster=cluster
+    )
 
-    print("Best parameters found:", best_params)
-    print("Final fitness:", best_fitness)
+    mcmc_m3vphi2 = MCMC(
+        model_class=M3VPHI2, nthreads=5, ndim=1, lower_bound=-0.5, upper_bound=0.5, cluster=cluster
+    )
+    mcmc_m3vphi24 = MCMC(
+        model_class=M3VPHI24, nthreads=5, ndim=2, lower_bound=-4, upper_bound=4, cluster=cluster
+    )
+    mcmc_m3vexp = MCMC(
+        model_class=M3VEXP, nthreads=5, ndim=2, lower_bound=-5, upper_bound=5, cluster=cluster
+    )
 
+    mcmc_threads = [
+        threading.Thread(target=mcmc_m1vphi2.begin),
+        threading.Thread(target=mcmc_m1vphi24.begin),
+        threading.Thread(target=mcmc_m1vexp.begin),
+    ]
 
-if __name__ == "__main__":
-    main()
+    mcmc_m2 = [
+        threading.Thread(target=mcmc_m2vphi2.begin),
+        threading.Thread(target=mcmc_m2vphi24.begin),
+        threading.Thread(target=mcmc_m2vexp.begin),
+    ]
 
-mcmc_m1vphi2 = MCMC(
-    model_class=M1VPHI2, nthreads=5, ndim=1, lower_bound=-1, upper_bound=1
-)
-mcmc_m1vphi24 = MCMC(
-    model_class=M1VPHI24, nthreads=5, ndim=2, lower_bound=-3, upper_bound=3
-)
-mcmc_m1vexp = MCMC(
-    model_class=M1VEXP, nthreads=5, ndim=2, lower_bound=-5, upper_bound=5
-)
+    mcmc_m3 = [
+        threading.Thread(target=mcmc_m3vphi2.begin),
+        threading.Thread(target=mcmc_m3vphi24.begin),
+        threading.Thread(target=mcmc_m3vexp.begin),
+    ]
 
-mcmc_m2vphi2 = MCMC(
-    model_class=M2VPHI2, nthreads=5, ndim=1, lower_bound=-0.5, upper_bound=0.5
-)
-mcmc_m2vphi24 = MCMC(
-    model_class=M2VPHI24, nthreads=5, ndim=2, lower_bound=-4, upper_bound=4
-)
-mcmc_m2vexp = MCMC(
-    model_class=M2VEXP, nthreads=5, ndim=2, lower_bound=-5, upper_bound=5
-)
+    for t in mcmc_threads:
+        t.start()
 
-mcmc_m3vphi2 = MCMC(
-    model_class=M3VPHI2, nthreads=5, ndim=1, lower_bound=-0.5, upper_bound=0.5
-)
-mcmc_m3vphi24 = MCMC(
-    model_class=M3VPHI24, nthreads=5, ndim=2, lower_bound=-4, upper_bound=4
-)
-mcmc_m3vexp = MCMC(
-    model_class=M3VEXP, nthreads=5, ndim=2, lower_bound=-5, upper_bound=5
-)
+    for t in mcmc_m2:
+        t.start()
 
-mcmc_threads = [
-    threading.Thread(target=mcmc_m1vphi2.begin),
-    threading.Thread(target=mcmc_m1vphi24.begin),
-    threading.Thread(target=mcmc_m1vexp.begin),
-]
-
-mcmc_m2 = [
-    threading.Thread(target=mcmc_m2vphi2.begin),
-    threading.Thread(target=mcmc_m2vphi24.begin),
-    threading.Thread(target=mcmc_m2vexp.begin),
-]
-
-mcmc_m3 = [
-    threading.Thread(target=mcmc_m3vphi2.begin),
-    threading.Thread(target=mcmc_m3vphi24.begin),
-    threading.Thread(target=mcmc_m3vexp.begin),
-]
-
-for t in mcmc_threads:
-    t.start()
-
-for t in mcmc_m2:
-    t.start()
-
-for t in mcmc_m3:
-    t.start()
+    for t in mcmc_m3:
+        t.start()
