@@ -69,4 +69,4 @@ class M2VPHI24(M2V0):
 
     @staticmethod
     def to_string():
-        return "m2vhpi24"
+        return "m2vphwi24"

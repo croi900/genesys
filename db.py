@@ -53,6 +53,30 @@ class DB:
             tx[model].insert(data)
 
     @staticmethod
+    def add_bbn(
+            model: str, runid, data_dict, initial_runid=None, goodness=None,
+            date=None
+    ):
+        data_dict = list(data_dict)
+        data = {
+            "model": model,
+            "runid": runid,
+            "goodness": goodness,
+        }
+        columns = ["Neff",
+                   "Omeganurel",
+                   "OneOverOmeganunr",
+                    "YpCMB",
+                    "YpBBN",
+                    "DoH",
+                    "He3oH",
+                    "Li7oH"]
+        tuples = [(columns[i], float(v)) for i, v in enumerate(data_dict)]
+        data.update(dict(tuples))
+        with DB.db as tx:
+            tx[model+"_bbn"].insert(data)
+
+    @staticmethod
     def add_monte_carlo(model: str, runid, abundances, date=None, logl=None):
         data = {
             "model": f"{model}",

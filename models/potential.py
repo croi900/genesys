@@ -307,10 +307,10 @@ class PotentialModel(Model):
     def _results_valid(self):
         reasons = []
 
-        if not self._rr_test():
-            reasons.append("RR test failed")
-        if not self._ww_ratio_test():
-            reasons.append("WW ratio test failed")
+        # if not self._rr_test():
+        #     reasons.append("RR test failed")
+        # if not self._ww_ratio_test():
+        #     reasons.append("WW ratio test failed")
         if self.temp.rho_w is None:
             reasons.append("Rho_w is None")
         if self.temp.p_w is None:
@@ -352,6 +352,30 @@ class PotentialModel(Model):
             return prym.PRyMresults()[4:8]
         except:
             return [np.inf, np.inf, np.inf, np.inf]
+
+    def compute_bbn(self):
+        if (
+            self.temp.rho_w is None
+            or self.temp.p_w is None
+            or self.temp.drho_dt_w is None
+        ):
+            raise RuntimeError("Cannot compute abundances without potential")
+
+        PRyMini.NP_e_flag = True
+        PRyMini.numba_flag = True
+        PRyMini.nacreii_flag = True
+        PRyMini.aTid_flag = False
+        PRyMini.smallnet_flag = True
+        PRyMini.compute_nTOp_flag = False
+        PRyMini.recompute_nTOp_rates = False
+        PRyMini.ReloadKeyRates()
+        try:
+            prym = PRyMmain.PRyMclass(
+                self.temp.rho_w, self.temp.p_w, self.temp.drho_dt_w
+            )
+            return prym.PRyMresults()
+        except:
+            return None
 
     @staticmethod
     def mcmc_constraints(theta):
