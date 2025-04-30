@@ -28,7 +28,7 @@ class MCMC:
         self.lower_bound = lower_bound
         self.upper_bound = upper_bound
 
-        self.Yp_ave = 0.247
+        self.Yp_ave = 0.245
         self.Yp_std = 0.003
 
         self.DoH_ave = 2.547
@@ -42,7 +42,7 @@ class MCMC:
 
         self.write_ctr = 0
 
-        self.model: Model
+        self.model: PotentialModel
         self.ndim = ndim
         self.nsteps = nsteps
         self.nwalkers = nwalkers
@@ -59,8 +59,11 @@ class MCMC:
         return datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     def _log_likelihood(self, theta):
-        Yp, DoH, He3oH, Li7oH = self.model.compute_abundances()
-
+        res = self.model.compute_bbn()
+        if res is not None:
+            Neff, Omeganuh2, OneOverOmehanuh2, YpCMB, Yp, DoH, He3oH, Li7oH = res
+        else:
+            return -np.inf
         chi2_Yp = (Yp - self.Yp_ave) ** 2 / self.Yp_std**2
         chi2_DoH = (DoH - self.DoH_ave) ** 2 / self.DoH_std**2
         chi2_He3oH = (He3oH - self.He3oH_ave) ** 2 / self.He3oH_std**2
@@ -90,6 +93,12 @@ class MCMC:
                 date=self._get_time_str(),
             )
 
+            DB.add_bbn( self.model_class.to_string(),
+                self.runid,
+                res,
+                goodness=-0.5 * (chi2_Yp + chi2_DoH + chi2_He3oH),
+                date=self._get_time_str(),)
+
         print(f"theta {theta} -> Yp: {Yp}, DoH: {DoH}, He3oH: {He3oH}, Li7oH: {Li7oH}")
         sys.stdout.flush()
 
@@ -104,7 +113,7 @@ class MCMC:
 
     def _log_prob(self, theta):
         params = list(theta) + list(self.initials)
-        self.model: Model = self.model_class(*params)
+        self.model: PotentialModel = self.model_class(*params)
 
         lp = self._log_prior(theta)
         if not np.isfinite(lp):

@@ -4,10 +4,13 @@ import warnings
 import numpy as np
 from scipy.integrate import cumulative_trapezoid, solve_ivp
 from scipy.interpolate import interp1d
+from termcolor import colored
+
 import PRyM.PRyM_init as PRyMini
 import PRyM.PRyM_main as PRyMmain
 from PRyM.PRyM_init import MeV, MeV4_to_gcmm3
 from .model import Model
+import PRyM.PRyM_thermo as PRyMthermo
 # an object to help with
 # notation of functions in the model
 # framework
@@ -23,6 +26,7 @@ class FuncPack:
         self.drho_dt_w = None
 
 
+
 class PotentialModel(Model):
     def __init__(
         self, p_phi0, p_phi01, p_psi0, p_psi01, p_alpha, p_lam, lambda_dpsi2=False
@@ -32,7 +36,7 @@ class PotentialModel(Model):
         self.atol = 1e-6  # ivp precision (absolute)
         self.h0 = 1.0  # initial constant value for adimensional h
         self.rr0 = 0.0  # initial constant value for adimensional rr
-        self.num_points = 20000  # number of points for IVP integration
+        self.num_points = 2000  # number of points for IVP integration
         self.solver = "BDF"  # solver method for IVP
         self.theta = np.linspace(0, 10, self.num_points)
 
@@ -59,6 +63,7 @@ class PotentialModel(Model):
         ]
 
         if lambda_dpsi2:
+            # print(self.__class__.__name__, lambda_dpsi2)
             self.initial_guess[-1] = self.lam
             self.initial_guess.append(self.rr0)
 
@@ -233,14 +238,14 @@ class PotentialModel(Model):
             (
                 self.drho_dt_w,
                 np.ones_like(
-                    self.theta_extended[len(self.p_w) : len(self.theta_extended)]
+                    self.theta_extended[len(self.drho_dt_w) : len(self.theta_extended)]
                 )
                 * self.drho_dt_w[-1],
             )
         )
 
         h_int_f = cumulative_trapezoid(
-            self.h_extended, self.theta_extended, initial=0.007386520369079301
+            self.h_extended, self.theta_extended, initial=0
         )
         T0 = 10
         T_vals = T0 * np.exp(-h_int_f)
@@ -268,18 +273,19 @@ class PotentialModel(Model):
         self.time.drho_dt_w = self._lerp(self.theta_extended, self.drho_dt_w_extended)
 
         self.temp.rho_w = (
-            lambda t: self.time.rho_w(self.tofT(t)) * MeV**4 * MeV4_to_gcmm3
+            lambda T: self.time.rho_w(self.tofT(T)) * MeV**4 * MeV4_to_gcmm3
         )
-        self.temp.p_w = lambda t: self.time.p_w(self.tofT(t)) * MeV**4 * MeV4_to_gcmm3
+        self.temp.p_w = lambda T: self.time.p_w(self.tofT(T)) * MeV**4 * MeV4_to_gcmm3
         self.temp.drho_dt_w = (
-            lambda t: self.time.drho_dt_w(self.tofT(t)) * MeV**4 * MeV4_to_gcmm3
+            lambda T: self.time.drho_dt_w(self.tofT(T)) * MeV ** 4 *  MeV4_to_gcmm3 * PRyMini.MeV_to_secm1
         )
-
+    # self.time.drho_dt_w(self.tofT(t)) * MeV ** 4 *  MeV4_to_gcmm3 * PRyMini.MeV_to_secm1 * 0
     # wrapper around np.interp for interpolation, could as well use
     # interp1d with linear kind but this was faster
     def _lerp(self, ts, ys):
         def interpolation(t):
-            return np.interp(t, ts, ys)
+            # return np.interp(t, ts, ys)
+            return np.interp(t,ts,np.clip(ys,0,np.inf))
 
         return interpolation
 
@@ -307,10 +313,10 @@ class PotentialModel(Model):
     def _results_valid(self):
         reasons = []
 
-        # if not self._rr_test():
-        #     reasons.append("RR test failed")
-        # if not self._ww_ratio_test():
-        #     reasons.append("WW ratio test failed")
+        if not self._rr_test():
+            reasons.append("RR test failed")
+        if not self._ww_ratio_test():
+            reasons.append("WW ratio test failed")
         if self.temp.rho_w is None:
             reasons.append("Rho_w is None")
         if self.temp.p_w is None:
@@ -340,11 +346,23 @@ class PotentialModel(Model):
         PRyMini.NP_e_flag = True
         PRyMini.numba_flag = True
         PRyMini.nacreii_flag = True
-        PRyMini.aTid_flag = False
+        PRyMini.aTid_flag = True
         PRyMini.smallnet_flag = True
         PRyMini.compute_nTOp_flag = False
         PRyMini.recompute_nTOp_rates = False
         PRyMini.ReloadKeyRates()
+
+        max_rho, min_rho = self.temp.rho_w(10), self.temp.rho_w(0.001)
+        max_p, min_p = self.temp.p_w(10), self.temp.p_w(0.001)
+        max_drho, min_drho = self.temp.drho_dt_w(10), self.temp.drho_dt_w(
+            0.001)
+
+        print(colored(f"[DEBUG] rho_g_std: {PRyMthermo.rho_g(10)}, "
+                      f"{PRyMthermo.rho_g(0.001)} ", "green"))
+
+        print(colored(f"[DEBUG] rho: {max_rho}, {min_rho}, p: {max_p}, "
+                      f"{min_p}, drho: {max_drho}, {min_drho}", "green"))
+
         try:
             prym = PRyMmain.PRyMclass(
                 self.temp.rho_w, self.temp.p_w, self.temp.drho_dt_w
@@ -354,13 +372,6 @@ class PotentialModel(Model):
             return [1e9,1e9,1e9,1e9]
 
     def compute_bbn(self):
-        if (
-            self.temp.rho_w is None
-            or self.temp.p_w is None
-            or self.temp.drho_dt_w is None
-        ):
-            raise RuntimeError("Cannot compute abundances without potential")
-
         PRyMini.NP_e_flag = True
         PRyMini.numba_flag = True
         PRyMini.nacreii_flag = True
@@ -368,7 +379,24 @@ class PotentialModel(Model):
         PRyMini.smallnet_flag = True
         PRyMini.compute_nTOp_flag = False
         PRyMini.recompute_nTOp_rates = False
+
+        mean_tau_n = PRyMini.tau_n
+        std_tau_n = 0.5
+        mean_Omegabh2 = PRyMini.Omegabh2
+        std_Omegabh2 = 2 * 1.e-4
         PRyMini.ReloadKeyRates()
+
+        PRyMini.tau_n = np.random.normal(mean_tau_n, std_tau_n)
+        # Gaussian extraction of cosmic baryonic abundance
+        PRyMini.Omegabh2 = np.random.normal(mean_Omegabh2, std_Omegabh2)
+        # IMPORTANT: Assign etab after updating Omegab (or directly vary etab)
+        PRyMini.eta0b = PRyMini.Omegabh2_to_eta0b * PRyMini.Omegabh2
+        # Gaussian weights for log-normal nuclear rates
+        (PRyMini.p_npdg, PRyMini.p_dpHe3g, PRyMini.p_ddHe3n, PRyMini.p_ddtp,
+         PRyMini.p_tpag,
+         PRyMini.p_tdan, PRyMini.p_taLi7g, PRyMini.p_He3ntp, PRyMini.p_He3dap,
+         PRyMini.p_He3aBe7g,
+         PRyMini.p_Be7nLi7p, PRyMini.p_Li7paa) = np.random.normal(0,1,12)
         try:
             prym = PRyMmain.PRyMclass(
                 self.temp.rho_w, self.temp.p_w, self.temp.drho_dt_w
