@@ -29,9 +29,10 @@ class FuncPack:
 
 class PotentialModel(Model):
     def __init__(
-        self, p_phi0, p_phi01, p_psi0, p_psi01, p_alpha, p_lam, lambda_dpsi2=False
+        self, p_phi0, p_phi01, p_psi0, p_psi01, p_alpha, p_lam, lambda_dpsi2=False, randomize=False
     ):
         super().__init__()
+        self.randomize = randomize
         self.rtol = 1e-3  # ivp precision (relative)
         self.atol = 1e-6  # ivp precision (absolute)
         self.h0 = 1.0  # initial constant value for adimensional h
@@ -352,17 +353,6 @@ class PotentialModel(Model):
         PRyMini.recompute_nTOp_rates = False
         PRyMini.ReloadKeyRates()
 
-        max_rho, min_rho = self.temp.rho_w(10), self.temp.rho_w(0.001)
-        max_p, min_p = self.temp.p_w(10), self.temp.p_w(0.001)
-        max_drho, min_drho = self.temp.drho_dt_w(10), self.temp.drho_dt_w(
-            0.001)
-
-        print(colored(f"[DEBUG] rho_g_std: {PRyMthermo.rho_g(10)}, "
-                      f"{PRyMthermo.rho_g(0.001)} ", "green"))
-
-        print(colored(f"[DEBUG] rho: {max_rho}, {min_rho}, p: {max_p}, "
-                      f"{min_p}, drho: {max_drho}, {min_drho}", "green"))
-
         try:
             prym = PRyMmain.PRyMclass(
                 self.temp.rho_w, self.temp.p_w, self.temp.drho_dt_w
@@ -379,24 +369,25 @@ class PotentialModel(Model):
         PRyMini.smallnet_flag = True
         PRyMini.compute_nTOp_flag = False
         PRyMini.recompute_nTOp_rates = False
-
-        mean_tau_n = PRyMini.tau_n
-        std_tau_n = 0.5
-        mean_Omegabh2 = PRyMini.Omegabh2
-        std_Omegabh2 = 2 * 1.e-4
         PRyMini.ReloadKeyRates()
+        if self.randomize:
+            mean_tau_n = PRyMini.tau_n
+            std_tau_n = 0.5
+            mean_Omegabh2 = PRyMini.Omegabh2
+            std_Omegabh2 = 2 * 1.e-4
 
-        PRyMini.tau_n = np.random.normal(mean_tau_n, std_tau_n)
-        # Gaussian extraction of cosmic baryonic abundance
-        PRyMini.Omegabh2 = np.random.normal(mean_Omegabh2, std_Omegabh2)
-        # IMPORTANT: Assign etab after updating Omegab (or directly vary etab)
-        PRyMini.eta0b = PRyMini.Omegabh2_to_eta0b * PRyMini.Omegabh2
-        # Gaussian weights for log-normal nuclear rates
-        (PRyMini.p_npdg, PRyMini.p_dpHe3g, PRyMini.p_ddHe3n, PRyMini.p_ddtp,
-         PRyMini.p_tpag,
-         PRyMini.p_tdan, PRyMini.p_taLi7g, PRyMini.p_He3ntp, PRyMini.p_He3dap,
-         PRyMini.p_He3aBe7g,
-         PRyMini.p_Be7nLi7p, PRyMini.p_Li7paa) = np.random.normal(0,1,12)
+            PRyMini.tau_n = np.random.normal(mean_tau_n, std_tau_n)
+            # Gaussian extraction of cosmic baryonic abundance
+            PRyMini.Omegabh2 = np.random.normal(mean_Omegabh2, std_Omegabh2)
+            # IMPORTANT: Assign etab after updating Omegab (or directly vary etab)
+            PRyMini.eta0b = PRyMini.Omegabh2_to_eta0b * PRyMini.Omegabh2
+            # Gaussian weights for log-normal nuclear rates
+            (PRyMini.p_npdg, PRyMini.p_dpHe3g, PRyMini.p_ddHe3n, PRyMini.p_ddtp,
+             PRyMini.p_tpag,
+             PRyMini.p_tdan, PRyMini.p_taLi7g, PRyMini.p_He3ntp, PRyMini.p_He3dap,
+             PRyMini.p_He3aBe7g,
+             PRyMini.p_Be7nLi7p, PRyMini.p_Li7paa) = np.random.normal(0,1,12)
+
         try:
             prym = PRyMmain.PRyMclass(
                 self.temp.rho_w, self.temp.p_w, self.temp.drho_dt_w
