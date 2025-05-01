@@ -54,7 +54,7 @@ class DB:
 
     @staticmethod
     def add_bbn(
-            model: str, runid, data_dict, initial_runid=None, goodness=None,
+            model: str, runid, data_dict, theta=None, goodness=None,
             date=None
     ):
         data_dict = list(data_dict)
@@ -62,6 +62,7 @@ class DB:
             "model": model,
             "runid": runid,
             "goodness": goodness,
+            "theta0": theta,
         }
         columns = ["Neff",
                    "Omeganurel",

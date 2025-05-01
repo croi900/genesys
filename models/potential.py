@@ -29,7 +29,7 @@ class FuncPack:
 
 class PotentialModel(Model):
     def __init__(
-        self, p_phi0, p_phi01, p_psi0, p_psi01, p_alpha, p_lam, lambda_dpsi2=False, randomize=False
+        self, p_phi0, p_phi01, p_psi0, p_psi01, p_alpha, p_lam, lambda_dpsi2=False, randomize=True
     ):
         super().__init__()
         self.randomize = randomize
@@ -365,28 +365,28 @@ class PotentialModel(Model):
         PRyMini.NP_e_flag = True
         PRyMini.numba_flag = True
         PRyMini.nacreii_flag = True
-        PRyMini.aTid_flag = False
+        PRyMini.aTid_flag = True
         PRyMini.smallnet_flag = True
         PRyMini.compute_nTOp_flag = False
         PRyMini.recompute_nTOp_rates = False
-        PRyMini.ReloadKeyRates()
-        if self.randomize:
-            mean_tau_n = PRyMini.tau_n
-            std_tau_n = 0.5
-            mean_Omegabh2 = PRyMini.Omegabh2
-            std_Omegabh2 = 2 * 1.e-4
+        # if self.randomize:
+        mean_tau_n = PRyMini.tau_n
+        std_tau_n = 0.5
+        mean_Omegabh2 = PRyMini.Omegabh2
+        std_Omegabh2 = 2 * 1.e-4
 
-            PRyMini.tau_n = np.random.normal(mean_tau_n, std_tau_n)
-            # Gaussian extraction of cosmic baryonic abundance
-            PRyMini.Omegabh2 = np.random.normal(mean_Omegabh2, std_Omegabh2)
-            # IMPORTANT: Assign etab after updating Omegab (or directly vary etab)
-            PRyMini.eta0b = PRyMini.Omegabh2_to_eta0b * PRyMini.Omegabh2
-            # Gaussian weights for log-normal nuclear rates
-            (PRyMini.p_npdg, PRyMini.p_dpHe3g, PRyMini.p_ddHe3n, PRyMini.p_ddtp,
-             PRyMini.p_tpag,
-             PRyMini.p_tdan, PRyMini.p_taLi7g, PRyMini.p_He3ntp, PRyMini.p_He3dap,
-             PRyMini.p_He3aBe7g,
-             PRyMini.p_Be7nLi7p, PRyMini.p_Li7paa) = np.random.normal(0,1,12)
+        PRyMini.tau_n = np.random.normal(mean_tau_n, std_tau_n)
+        # Gaussian extraction of cosmic baryonic abundance
+        PRyMini.Omegabh2 = np.random.normal(mean_Omegabh2, std_Omegabh2)
+        # IMPORTANT: Assign etab after updating Omegab (or directly vary etab)
+        PRyMini.eta0b = PRyMini.Omegabh2_to_eta0b * PRyMini.Omegabh2
+        # Gaussian weights for log-normal nuclear rates
+        (PRyMini.p_npdg, PRyMini.p_dpHe3g, PRyMini.p_ddHe3n, PRyMini.p_ddtp,
+         PRyMini.p_tpag,
+         PRyMini.p_tdan, PRyMini.p_taLi7g, PRyMini.p_He3ntp, PRyMini.p_He3dap,
+         PRyMini.p_He3aBe7g,
+         PRyMini.p_Be7nLi7p, PRyMini.p_Li7paa) = np.random.normal(0,1,12)
+        PRyMini.ReloadKeyRates()
 
         try:
             prym = PRyMmain.PRyMclass(
