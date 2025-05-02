@@ -1,6 +1,6 @@
 import numpy as np
 
-from models import M2V0, M3V0
+from models import M3V0
 from models.potential import PotentialModel
 
 

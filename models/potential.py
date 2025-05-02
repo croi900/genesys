@@ -285,7 +285,6 @@ class PotentialModel(Model):
     # interp1d with linear kind but this was faster
     def _lerp(self, ts, ys):
         def interpolation(t):
-            # return np.interp(t, ts, ys)
             return np.interp(t,ts,np.clip(ys,0,np.inf))
 
         return interpolation
@@ -303,7 +302,10 @@ class PotentialModel(Model):
     # checks if rr is positive, again
     # accounting for precision errors
     def _rr_test(self):
-        return np.all(self.rr > -0.001)
+        if self.__class__.to_string()[:2] in ["m1","m2"]:
+            return np.all(self.rr > -0.001)
+        else:
+            return np.all(self.rr > -0.012)
 
     # computes the freezouts value
     def _compute_freezout(self):
@@ -354,9 +356,11 @@ class PotentialModel(Model):
         PRyMini.ReloadKeyRates()
 
         try:
+            print("before prym")
             prym = PRyMmain.PRyMclass(
                 self.temp.rho_w, self.temp.p_w, self.temp.drho_dt_w
             )
+            print("after prym")
             return prym.PRyMresults()[4:8]
         except:
             return [1e9,1e9,1e9,1e9]

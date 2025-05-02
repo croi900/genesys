@@ -61,7 +61,7 @@ class M2VPHI24(M2V0):
         return [d_h, d_phi, d_phi_2, d_psi, d_psi_2, d_psi_3, d_rr]
 
     @staticmethod
-    def monte_carlo_contstraints(theta):
+    def mcmc_constraints(theta):
         if theta[0] > 0:
             return False
         else:
