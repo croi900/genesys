@@ -21,6 +21,7 @@ Genesys is a Python framework for analyzing Big Bang Nucleosynthesis (BBN) model
   - dataset
   - pymysql
   - python-dotenv
+- **PRyMordial**: https://github.com/vallima/PRyMordial/commit/bf24c3d064fe35ec2d612f2ccd8f03306d570b6a (NOT MANAGED BY UV)
 
 ## Quick Start
 1. Clone the repository
