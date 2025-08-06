@@ -246,7 +246,7 @@ class PotentialModel(Model):
         )
 
         h_int_f = cumulative_trapezoid(
-            self.h_extended, self.theta_extended, initial=0
+            self.h_extended, self.theta_extended, initial=0.007386520369079301
         )
         T0 = 10
         T_vals = T0 * np.exp(-h_int_f)

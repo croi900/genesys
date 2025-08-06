@@ -36,7 +36,7 @@ class M1V0(PotentialModel):
         d_h = 0.5 * (
             -3 * h**2
             - rr
-            - np.exp(self.beta * phi) * (0.5 * phi_prime**2 - 0)
+            - np.exp(self.beta * phi) * (0.5 * phi_prime**2 - self._v(phi))
             + (self.alpha**2 / 2) * (self.lam - psi_prime**2)
         )
 

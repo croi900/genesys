@@ -18,7 +18,7 @@ class M3VPHI2(M3V0):
             np.log(
                 3
                 - self.alpha**2
-                / 2
+                / 6
                 * (self.lam + 3 * self.h0 * self.psi01 + self.psi01**2)
             )
             - np.log(self.phi01**2 / 2 + self.x * self.phi0**2)

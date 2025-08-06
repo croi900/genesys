@@ -13,8 +13,8 @@ from models import *  # Import your null potential model class
 
 warnings.filterwarnings("ignore")
 class CallHolder:
-    def __init__(self, clazz, runid, mu: float | tuple[float, float] = 0,
-                 std: float | tuple[float, float] = 0, num_param=1, num_runs=1):
+    def __init__(self, clazz, runid, mu,
+                 std, num_param=1, num_runs=1):
         self.model_class = clazz
         self.runid = runid
         self.mu = mu
@@ -26,10 +26,10 @@ class CallHolder:
         def comp():
             np.random.seed(random.randint(1,10000000))
             if num_param == 1:
-                # param = np.random.normal(mu, std, (1,))
-                param = [mu]
+                param = np.random.normal(mu, std, (1,))
+                # param = [mu]
             else:
-                param = list(mu)#np.random.normal(mu, std, (2,))
+                param = np.random.normal(mu, std, (2,))
             parameters = list(param) + list(clazz.get_initials())
             model = clazz(*parameters)
             if model.valid == False:
@@ -70,7 +70,7 @@ m3vexp: 1.693317008137045, 0.6312819082150594
 
 """
 calls = [
-    # CallHolder(M1VPHI2, 0,0.0005615235277372262, 0.0001598178336046932, 1, 10000),
+    CallHolder(M1VPHI2, 0,0.0005615235277372262, 0.0001598178336046932, 1, 10000),
     # CallHolder(M1VPHI24, 0, (-0.005509549623843782, 2.1985050873586847), (0.0023895031821490665, 0.9584276393664122), 2, 10000),
     # CallHolder(M1VEXP, 0, (2.824530644374782, 2.515918196865204), (0.05339503015951905, 1.1824084883834685), 2, 10000),
     #
@@ -78,9 +78,9 @@ calls = [
     # CallHolder(M2VPHI24, 0, (-0.000407619815153719, 0.3226697100165289), (0.00019527345867162578, 0.12905472738339577), 2, 10000),
     # CallHolder(M2VEXP, 0, (2.8949689209401708, 1.5628342940170938), (0.051284796651672855, 0.6941707304567979), 2, 10000),
     #
-    CallHolder(M3VPHI2, 0,0.0003059104844155844, 0.00011275282324593558, 1, 10000),
-    CallHolder(M3VPHI24, 0, (-3.0237504571428573e-05, 0.5838196933333333), (2.0157890494672115e-05, 0.20160200591133598), 2, 10000),
-    CallHolder(M3VEXP, 0, (2.970619408993576, 1.693317008137045), (0.013936769624759645, 0.6312819082150594), 2, 10000)
+    # CallHolder(M3VPHI2, 0,0.0003059104844155844, 0.00011275282324593558, 1, 10000),
+    # CallHolder(M3VPHI24, 0, (-3.0237504571428573e-05, 0.5838196933333333), (2.0157890494672115e-05, 0.20160200591133598), 2, 10000),
+    # CallHolder(M3VEXP, 0, (2.970619408993576, 1.693317008137045), (0.013936769624759645, 0.6312819082150594), 2, 10000)
 ]
 
 

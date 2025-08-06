@@ -16,7 +16,12 @@ class M3VEXP(M3V0):
 
     def _compute_beta(self):
         self.beta = (
-            np.log(3 - self.alpha**2 / 2 * self.lam)
+            np.log(
+                3
+                - self.alpha**2
+                / 6
+                * (self.lam + 3 * self.h0 * self.psi01 + self.psi01**2)
+            )
             - np.log(self.phi01**2 / 2 + self.x * np.exp(-self.z * self.phi0))
         ) / self.phi0
 
