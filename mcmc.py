@@ -21,7 +21,7 @@ class MCMC:
         nwalkers=5,
         nthreads=8,
         database=True,
-        cluster=None
+        cluster=None,
     ):
         self.initials = model_class.get_initials()
         self.model_class: PotentialModel.__class__ = model_class
@@ -93,11 +93,13 @@ class MCMC:
                 date=self._get_time_str(),
             )
 
-            DB.add_bbn( self.model_class.to_string(),
+            DB.add_bbn(
+                self.model_class.to_string(),
                 self.runid,
                 res,
                 goodness=-0.5 * (chi2_Yp + chi2_DoH + chi2_He3oH),
-                date=self._get_time_str(),)
+                date=self._get_time_str(),
+            )
 
         print(f"theta {theta} -> Yp: {Yp}, DoH: {DoH}, He3oH: {He3oH}, Li7oH: {Li7oH}")
         sys.stdout.flush()
@@ -132,7 +134,6 @@ class MCMC:
                 )
                 sampler.run_mcmc(initial_pop, self.nsteps, progress=True)
         else:
-
             initial_pop = np.random.uniform(
                 self.lower_bound, self.upper_bound, (self.nwalkers, self.ndim)
             )
@@ -141,4 +142,3 @@ class MCMC:
                 self.nwalkers, self.ndim, self._log_prob, pool=self.cluster
             )
             sampler.run_mcmc(initial_pop, self.nsteps, progress=True)
-

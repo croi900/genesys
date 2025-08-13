@@ -26,10 +26,17 @@ class FuncPack:
         self.drho_dt_w = None
 
 
-
 class PotentialModel(Model):
     def __init__(
-        self, p_phi0, p_phi01, p_psi0, p_psi01, p_alpha, p_lam, lambda_dpsi2=False, randomize=True
+        self,
+        p_phi0,
+        p_phi01,
+        p_psi0,
+        p_psi01,
+        p_alpha,
+        p_lam,
+        lambda_dpsi2=False,
+        randomize=True,
     ):
         super().__init__()
         self.randomize = randomize
@@ -278,14 +285,18 @@ class PotentialModel(Model):
         )
         self.temp.p_w = lambda T: self.time.p_w(self.tofT(T)) * MeV**4 * MeV4_to_gcmm3
         self.temp.drho_dt_w = (
-            lambda T: self.time.drho_dt_w(self.tofT(T)) * MeV ** 4 *  MeV4_to_gcmm3 * PRyMini.MeV_to_secm1
+            lambda T: self.time.drho_dt_w(self.tofT(T))
+            * MeV**4
+            * MeV4_to_gcmm3
+            * PRyMini.MeV_to_secm1
         )
+
     # self.time.drho_dt_w(self.tofT(t)) * MeV ** 4 *  MeV4_to_gcmm3 * PRyMini.MeV_to_secm1 * 0
     # wrapper around np.interp for interpolation, could as well use
     # interp1d with linear kind but this was faster
     def _lerp(self, ts, ys):
         def interpolation(t):
-            return np.interp(t,ts,np.clip(ys,0,np.inf))
+            return np.interp(t, ts, np.clip(ys, 0, np.inf))
 
         return interpolation
 
@@ -302,7 +313,7 @@ class PotentialModel(Model):
     # checks if rr is positive, again
     # accounting for precision errors
     def _rr_test(self):
-        if self.__class__.to_string()[:2] in ["m1","m2"]:
+        if self.__class__.to_string()[:2] in ["m1", "m2"]:
             return np.all(self.rr > -0.001)
         else:
             return np.all(self.rr > -0.012)
@@ -363,7 +374,7 @@ class PotentialModel(Model):
             print("after prym")
             return prym.PRyMresults()[4:8]
         except:
-            return [1e9,1e9,1e9,1e9]
+            return [1e9, 1e9, 1e9, 1e9]
 
     def compute_bbn(self):
         PRyMini.NP_e_flag = True
@@ -377,7 +388,7 @@ class PotentialModel(Model):
         mean_tau_n = PRyMini.tau_n
         std_tau_n = 0.5
         mean_Omegabh2 = PRyMini.Omegabh2
-        std_Omegabh2 = 2 * 1.e-4
+        std_Omegabh2 = 2 * 1.0e-4
 
         PRyMini.tau_n = np.random.normal(mean_tau_n, std_tau_n)
         # Gaussian extraction of cosmic baryonic abundance
@@ -385,11 +396,20 @@ class PotentialModel(Model):
         # IMPORTANT: Assign etab after updating Omegab (or directly vary etab)
         PRyMini.eta0b = PRyMini.Omegabh2_to_eta0b * PRyMini.Omegabh2
         # Gaussian weights for log-normal nuclear rates
-        (PRyMini.p_npdg, PRyMini.p_dpHe3g, PRyMini.p_ddHe3n, PRyMini.p_ddtp,
-         PRyMini.p_tpag,
-         PRyMini.p_tdan, PRyMini.p_taLi7g, PRyMini.p_He3ntp, PRyMini.p_He3dap,
-         PRyMini.p_He3aBe7g,
-         PRyMini.p_Be7nLi7p, PRyMini.p_Li7paa) = np.random.normal(0,1,12)
+        (
+            PRyMini.p_npdg,
+            PRyMini.p_dpHe3g,
+            PRyMini.p_ddHe3n,
+            PRyMini.p_ddtp,
+            PRyMini.p_tpag,
+            PRyMini.p_tdan,
+            PRyMini.p_taLi7g,
+            PRyMini.p_He3ntp,
+            PRyMini.p_He3dap,
+            PRyMini.p_He3aBe7g,
+            PRyMini.p_Be7nLi7p,
+            PRyMini.p_Li7paa,
+        ) = np.random.normal(0, 1, 12)
         PRyMini.ReloadKeyRates()
 
         try:
