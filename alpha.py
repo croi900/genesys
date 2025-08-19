@@ -8,7 +8,7 @@ from joblib import Parallel, delayed
 import os
 
 from models import *
-
+#Model 1 Epoch Best: 1610.323876904468 | All-Time Best: 1981.8652124977523 -> [0.01383253 0.21218537 1.         1.         0.05145449 0.23121775]
 
 class AlphaGA:
     def __init__(
@@ -80,7 +80,7 @@ class AlphaGA:
             
             return 1 if valid else 0
                 
-        total_good = np.sum(Parallel(n_jobs = -1)(delayed(test)() for _ in range(self.mc_runs)))
+        total_good = np.sum(Parallel(n_jobs = 15)(delayed(test)() for _ in range(self.mc_runs)))
 
         return np.sum([(sigma/self.varlo) * (total_good/self.mc_runs) for sigma in sigmas]), sigmas
 
@@ -91,7 +91,8 @@ class AlphaGA:
         for i in range(len(candidate)):
             if random.random() < self.mutrate:
                 col = random.randint(0, self.npar - 1)
-                candidate[i] = np.random.uniform(self.varlo, self.varhi)
+                candidate[i] = np.random.uniform(self.varlo, self.varhi) / 2 + candidate[i] * (1 + np.random.uniform()) / 2
+                candidate[i] = min(self.varhi,max(candidate[i], self.varlo))
         return candidate
 
     def corssover(self, parent1, parent2):
@@ -101,7 +102,7 @@ class AlphaGA:
         return child1
 
     def eval_population(self, popultaion):
-        results =  Parallel(n_jobs=-1)(delayed(self.test_sigma)(candidate) for candidate in popultaion)
+        results =  Parallel(n_jobs=2)(delayed(self.test_sigma)(candidate) for candidate in popultaion)
         results = list(sorted(results, key=lambda x: x[0], reverse=True))
         # print(results)
 
@@ -155,7 +156,7 @@ class AlphaGA:
 if __name__ == "__main__":
     warnings.filterwarnings("ignore")
 
-    ga = AlphaGA(M1V0, 6,0.001, 10, 1000, 100, 10, 0.3, 0.4, 1000)
+    ga = AlphaGA(M1V0, 6,0.001, 1, 1000, 100, 100, 0.3, 0.4, 1000)
     ga.run()
 
 
